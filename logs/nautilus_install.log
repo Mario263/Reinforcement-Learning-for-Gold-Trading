@@ -1,0 +1,41 @@
+Collecting nautilus_trader
+  Downloading nautilus_trader-1.202.0-cp310-cp310-win_amd64.whl (31.6 MB)
+     ---------------------------------------- 31.6/31.6 MB 1.5 MB/s eta 0:00:00
+Collecting setuptools>=73
+  Using cached setuptools-82.0.1-py3-none-any.whl (1.0 MB)
+Collecting msgspec<0.19.0,>=0.18.6
+  Downloading msgspec-0.18.6-cp310-cp310-win_amd64.whl (185 kB)
+     -------------------------------------- 185.7/185.7 kB 5.7 MB/s eta 0:00:00
+Requirement already satisfied: numpy>=1.26.4 in c:\users\abhishek sharma\appdata\local\programs\python\python310\lib\site-packages (from nautilus_trader) (2.2.6)
+Requirement already satisfied: pandas<3.0.0,>=2.2.3 in c:\users\abhishek sharma\appdata\local\programs\python\python310\lib\site-packages (from nautilus_trader) (2.3.3)
+Requirement already satisfied: pyarrow>=17.0.0 in c:\users\abhishek sharma\appdata\local\programs\python\python310\lib\site-packages (from nautilus_trader) (24.0.0)
+Collecting cython==3.0.11
+  Downloading Cython-3.0.11-cp310-cp310-win_amd64.whl (2.8 MB)
+     ---------------------------------------- 2.8/2.8 MB 3.0 MB/s eta 0:00:00
+Requirement already satisfied: pytz>=2024.2.0 in c:\users\abhishek sharma\appdata\local\programs\python\python310\lib\site-packages (from nautilus_trader) (2026.2)
+Requirement already satisfied: tqdm<5.0.0,>=4.66.5 in c:\users\abhishek sharma\appdata\local\programs\python\python310\lib\site-packages (from nautilus_trader) (4.67.3)
+Requirement already satisfied: click<9.0.0,>=8.1.7 in c:\users\abhishek sharma\appdata\local\programs\python\python310\lib\site-packages (from nautilus_trader) (8.3.1)
+Collecting toml<0.11.0,>=0.10.2
+  Using cached toml-0.10.2-py2.py3-none-any.whl (16 kB)
+Collecting fsspec==2023.6.0
+  Downloading fsspec-2023.6.0-py3-none-any.whl (163 kB)
+     -------------------------------------- 163.8/163.8 kB 9.6 MB/s eta 0:00:00
+Requirement already satisfied: colorama in c:\users\abhishek sharma\appdata\local\programs\python\python310\lib\site-packages (from click<9.0.0,>=8.1.7->nautilus_trader) (0.4.6)
+Requirement already satisfied: tzdata>=2022.7 in c:\users\abhishek sharma\appdata\local\programs\python\python310\lib\site-packages (from pandas<3.0.0,>=2.2.3->nautilus_trader) (2026.2)
+Requirement already satisfied: python-dateutil>=2.8.2 in c:\users\abhishek sharma\appdata\local\programs\python\python310\lib\site-packages (from pandas<3.0.0,>=2.2.3->nautilus_trader) (2.9.0.post0)
+Requirement already satisfied: six>=1.5 in c:\users\abhishek sharma\appdata\local\programs\python\python310\lib\site-packages (from python-dateutil>=2.8.2->pandas<3.0.0,>=2.2.3->nautilus_trader) (1.17.0)
+Installing collected packages: toml, setuptools, msgspec, fsspec, cython, nautilus_trader
+  Attempting uninstall: setuptools
+    Found existing installation: setuptools 65.5.0
+    Uninstalling setuptools-65.5.0:
+      Successfully uninstalled setuptools-65.5.0
+  Attempting uninstall: fsspec
+    Found existing installation: fsspec 2026.1.0
+    Uninstalling fsspec-2026.1.0:
+      Successfully uninstalled fsspec-2026.1.0
+ERROR: pip's dependency resolver does not currently take into account all the packages that are installed. This behaviour is the source of the following dependency conflicts.
+torch 2.12.1+cu132 requires setuptools<82, but you have setuptools 82.0.1 which is incompatible.
+Successfully installed cython-3.0.11 fsspec-2023.6.0 msgspec-0.18.6 nautilus_trader-1.202.0 setuptools-82.0.1 toml-0.10.2
+
+[notice] A new release of pip is available: 23.0.1 -> 26.1.2
+[notice] To update, run: python.exe -m pip install --upgrade pip

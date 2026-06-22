@@ -1,0 +1,23 @@
+"""252-day rolling z-score normalization (Paper Section IV.B, Eq.13, PDF p.6).
+
+    z_t = (x_t - mu_{t-252:t}) / sigma_{t-252:t}
+
+CAUSAL: trailing 252-observation window only (inclusive of t) -> no look-ahead.
+Applied per-feature (not global). Replaces any global/running normalization.
+"""
+import numpy as np
+import pandas as pd
+
+from rl_gold_trading.config import ZSCORE_WINDOW
+
+
+def rolling_zscore(df: pd.DataFrame, feature_cols, window: int = ZSCORE_WINDOW) -> pd.DataFrame:
+    out = df.copy()
+    for col in feature_cols:
+        s = out[col].astype(float)
+        mu = s.rolling(window, min_periods=window).mean()
+        sigma = s.rolling(window, min_periods=window).std(ddof=0)
+        out[col] = (s - mu) / sigma.replace(0.0, np.nan)
+    out = out.dropna(subset=list(feature_cols)).copy()
+    out[list(feature_cols)] = out[list(feature_cols)].replace([np.inf, -np.inf], 0.0)
+    return out

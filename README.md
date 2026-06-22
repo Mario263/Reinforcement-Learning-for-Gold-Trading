@@ -1,141 +1,66 @@
-# Reinforcement Learning for Gold Trading
+# PPO Raw Baseline — XAU/USD (Paper Reproduction)
 
-This repository implements a Reinforcement Learning (RL) system for trading XAUUSD (Gold vs US Dollar) using Proximal Policy Optimization (PPO). The model is trained on historical gold price data from 2004 to 2025, resampled to 15-minute intervals.
+This repository has been transformed into a **faithful reproduction of the "PPO without Kalman filtering" (PPO Raw) baseline** from:
 
-## Features
+> Kili, Raouyane, Rachdi, Bellafkih. *Kalman-Enhanced Deep Reinforcement Learning for Noise-Resilient Algorithmic Trading in Volatile Gold Markets.* IJACSA 16(11), 2025.
 
-- **Custom Trading Environment**: Gymnasium-based environment simulating gold trading with realistic constraints
-- **Advanced Features**: Log returns, RSI, Moving Averages, Bollinger Bands, MACD, and volume indicators
-- **Risk Management**: Position sizing, daily loss limits, profit targets, and drawdown controls
-- **Evaluation Metrics**: Sharpe ratio, win rate, max drawdown, and daily profit analysis
-- **Pre-trained Model**: Ready-to-use PPO model trained on 1 million timesteps
+It reproduces **only** the PPO Raw baseline (no Kalman, no DQN, no RPPO). The paper — not this codebase's original strategy — is the source of truth. See [docs/PPO_RAW_REPRODUCTION_REPORT.md](docs/PPO_RAW_REPRODUCTION_REPORT.md) and [../researchPaper/PPO_RAW_GROUND_TRUTH.md](../researchPaper/PPO_RAW_GROUND_TRUTH.md).
 
-## Model Performance (Test Set: 2024-2025)
+> **Env ↔ Nautilus validated (Phase 6):** the RL-environment result (+48.94%) was independently reproduced in an event-driven **Nautilus Trader** backtest (**+48.67%**, Δ < 0.3 pp) after fixing a harness fill-timing bug. See [docs/ROOT_CAUSE_REPORT.md](docs/ROOT_CAUSE_REPORT.md) and [docs/REPLICATION_CORRECTION_REPORT.md](docs/REPLICATION_CORRECTION_REPORT.md).
 
-- **Average Daily Profit**: $51.46
-- **Win Rate**: 69.0%
-- **Max Drawdown**: 12.0%
-- **Sharpe Ratio**: 7.56
-- **Average Trades per Day**: 2.66
+## Methodology (all values from the paper)
+- **Data:** XAU/USD, 2017-01 → 2025-01, **resampled to daily** OHLCV (Paper §IV.A).
+- **State:** exactly **22 features** = 5 raw OHLCV + 17 technical indicators (SMA 10/20/50, EMA 12/26, MACD line+signal, RSI 14, Stochastic %K/%D, Bollinger 20±2σ, ATR 14, OBV, VWAP, CCI, Williams %R), computed with the `ta` library (§IV.B).
+- **Normalization:** 252-day **causal rolling z-score** (§IV.B, Eq.13).
+- **Split:** calendar — train 2017→2022; reported metrics on the **621-day window** Jan 2 2023 → Sep 12 2024 (§IV.A).
+- **Action:** `Discrete(3)` → {sell −1, hold 0, buy +1}; **100% capital** (§IV.E).
+- **Reward (Eq.22):** `1.0·Return − 2.0·Drawdown − 0.5·Cost + 0.1·Stability` (§IV.F).
+- **Costs:** commission 0.01% + spread 0.005% (§IV.E).
+- **Agent:** Stable-Baselines3 **PPO**, actor & critic `[512,512,256,128]` Tanh, clip 0.2, GAE 0.95, c₁0.5, c₂0.01, lr 3e-4 **linear decay**, n_steps 2048, batch 256, 10 epochs, γ 0.99, **500,000 timesteps** (§IV.G.2/H).
 
-## Installation
-
-1. Clone the repository:
+## Install
 ```bash
-git clone https://github.com/JonusNattapong/Reinforcement-Learning-for-Gold-Trading.git
-cd Reinforcement-Learning-for-Gold-Trading
+pip install stable-baselines3 gymnasium torch pandas numpy ta datasets
 ```
 
-2. Create a virtual environment:
+## Run
 ```bash
-python -m venv .venv
-# On Windows:
-.venv\Scripts\activate
-# On Unix/MacOS:
-source .venv/bin/activate
+python train.py --smoke      # fast 5k-step sanity check
+python train.py              # full 500k-step reproduction (train + eval)
+python train.py --mode eval  # evaluate a saved model on the 621-day window
 ```
+Outputs: `models/ppo_xauusd_raw.zip`, `models/ppo_raw_metrics.json`.
 
-3. Install dependencies:
+## Paper PPO Raw target (Table I/II)
+| Cumulative return | CAGR | Sharpe | Max drawdown | Win rate |
+|---|---|---|---|---|
+| 15.39% | 6.00% | 0.69 | −11.22% | 50.16% |
+
+## Nautilus event-driven backtest
 ```bash
-pip install stable-baselines3 gymnasium pandas numpy datasets safetensors torch
+python nautilus/run_backtest.py    # -> nautilus/nautilus_metrics.json
+python forensics/parity.py         # env-vs-Nautilus row-by-row diff CSVs
 ```
 
-## Usage
-
-### Training a New Model
-
-To train a new PPO model:
-
-```bash
-python train.py --mode train --timesteps 1000000
+## Project structure
 ```
-
-Optional arguments:
-- `--csv`: Path to custom CSV data file (falls back to Hugging Face dataset)
-- `--timesteps`: Total training timesteps (default: 1,000,000)
-- `--save-dir`: Directory to save model (default: models)
-
-### Evaluating the Pre-trained Model
-
-To evaluate the existing model on test data:
-
-```bash
-python train.py --mode eval
+train.py                 # CLI entry point (train / eval)
+src/rl_gold_trading/      # the paper-faithful PPO Raw pipeline
+  config.py    data.py    features.py   normalize.py
+  envs.py      vec_env.py train.py      metrics.py    run.py
+nautilus/                 # event-driven Nautilus Trader backtest harness
+  strategy.py            # RLPolicyStrategy (inference only)
+  run_backtest.py        # instrument/venue/data/run + metrics
+forensics/                # verification & parity scripts
+  parity.py reconstruct.py fill_offset.py run_forensics.py attribution.py
+  outputs/               # generated CSVs + JSON dumps
+docs/                     # all audit / forensic / replication reports (30+)
+models/                   # trained model + metrics JSON
+logs/                     # training / install logs
 ```
+Doc index: see `docs/` — start with `ROOT_CAUSE_REPORT.md`, `REPLICATION_CORRECTION_REPORT.md`, `PPO_RAW_REPRODUCTION_REPORT.md`, `PPO_PAPER_CONFORMANCE_CHECKLIST.md`.
 
-### Training and Evaluating
-
-To train a new model and evaluate it:
-
-```bash
-python train.py --mode train_eval
-```
-
-## Configuration
-
-The system uses three main configuration classes:
-
-- **DataConfig**: Data loading and splitting parameters
-- **EnvConfig**: Trading environment settings (capital, position sizes, costs, penalties)
-- **TrainConfig**: PPO training hyperparameters
-
-Modify these in `src/rl_gold_trading/config.py` to customize behavior.
-
-## Data
-
-The model uses XAUUSD historical data. By default, it loads from the Hugging Face dataset `ZombitX64/xauusd-gold-price-historical-data-2004-2025`. You can provide your own CSV file with columns: datetime, open, high, low, close, volume.
-
-## Loading the Trained Model
-
-```python
-from stable_baselines3 import PPO
-from stable_baselines3.common.vec_env import VecNormalize
-from safetensors.torch import load_file
-import torch
-
-# Load the SafeTensors model
-model = PPO("MlpPolicy", env)  # env should match training environment
-state_dict = load_file("models/ppo_xauusd.safetensors")
-model.policy.load_state_dict(state_dict)
-```
-
-## Project Structure
-
-```
-├── src/rl_gold_trading/
-│   ├── __init__.py
-│   ├── config.py          # Configuration dataclasses
-│   ├── data.py            # Data loading and preprocessing
-│   ├── envs.py            # Gymnasium trading environment
-│   ├── features.py        # Technical indicators
-│   ├── metrics.py         # Evaluation metrics
-│   ├── run.py             # Main training/evaluation script
-│   ├── train.py           # PPO training logic
-│   └── vec_env.py         # Vectorized environment utilities
-├── models/                # Saved models and normalization stats
-├── train.py               # Entry point script
-└── README.md
-```
-
-## Dependencies
-
-- stable-baselines3
-- gymnasium
-- pandas
-- numpy
-- datasets (for Hugging Face data loading)
-- safetensors
-- torch
-
-## License
-
-MIT License
-
-## Contributing
-
-Contributions are welcome! Please feel free to submit issues and pull requests.
-
-## Disclaimer
-
-This is a research project for educational purposes. Trading involves risk and past performance does not guarantee future results. Always do your own research and consider consulting financial advisors before making trading decisions.
-
+## Notes
+- This reproduces the paper's raw baseline faithfully; trade frequency is an **output**, never tuned.
+- Documented paper-side under-specifications (2 of 17 indicators, S_stability formula, Sharpe annualization, market-impact/slippage parameters, data vendor) are listed in `docs/PPO_PAPER_CONFORMANCE_CHECKLIST.md`.
+- Derived from `JonusNattapong/Reinforcement-Learning-for-Gold-Trading` (the original intraday strategy was replaced). MIT License. Research/educational use only; trading involves risk.

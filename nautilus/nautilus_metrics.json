@@ -1,0 +1,24 @@
+{
+  "nautilus": {
+    "n_periods": 530,
+    "cumulative_return": 0.6314922297219545,
+    "cagr": 0.26205463330759615,
+    "sharpe": 2.1336413634937226,
+    "sortino": 2.1227756096827255,
+    "calmar": 6.557644737317519,
+    "max_drawdown": -0.03996170024526102,
+    "min_equity": 99631.400293,
+    "nonpositive_periods": 0
+  },
+  "trade_stats": {
+    "round_trips": 37,
+    "win_rate": 0.7837837837837838,
+    "profit_factor": 6.12706199592271
+  },
+  "n_fills": 75,
+  "starting_usd": 100000.0,
+  "final_usd": 163124.9142159998,
+  "fee_per_fill": 0.00015,
+  "n_bars": 531,
+  "max_abs_position": 66.0
+}
