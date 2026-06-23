@@ -1,3 +1,5 @@
+> ⚠️ **DAILY-ERA — SUPERSEDED.** This report describes the original **daily** pipeline. The build now runs **hourly + 5-day-week** (user-directed). Performance numbers below are daily-era and STALE pending a retrain. See [HOURLY_5DAY_DEVIATION.md](HOURLY_5DAY_DEVIATION.md).
+
 # DATASET CONFORMANCE REPORT
 
 Paper value (from `../../researchPaper/PPO_RAW_GROUND_TRUTH.md`, with PDF page) vs current Region-II implementation. **Blocking severity**: 🔴 must fix before a faithful run · 🟠 should fix · 🟡 document-only (paper under-specified) · ⚪ acceptable/unverifiable.

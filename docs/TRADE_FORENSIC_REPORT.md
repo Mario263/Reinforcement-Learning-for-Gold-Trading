@@ -1,3 +1,5 @@
+> ⚠️ **DAILY-ERA — SUPERSEDED.** This report describes the original **daily** pipeline. The build now runs **hourly + 5-day-week** (user-directed). Performance numbers below are daily-era and STALE pending a retrain. See [HOURLY_5DAY_DEVIATION.md](HOURLY_5DAY_DEVIATION.md).
+
 # TRADE FORENSIC REPORT
 
 Exact trade counts for the trained PPO Raw model on the 621-day window (2023-01-03 → 2024-09-12, 530 daily periods). All values read **directly** from the generated position series in `forensics/forensic_dump.json` (no estimation, no inference). Definitions are code-traceable to `forensics/run_forensics.py`.

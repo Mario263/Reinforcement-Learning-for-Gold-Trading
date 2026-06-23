@@ -59,5 +59,31 @@ A retrained model (env +63.78%) produced a catastrophic Nautilus result (−72%,
 
 **Result:** Nautilus −72%/−$1.9M → **+63.15%/$163,125**; max leverage 1.00×; equity never < 0; converges with env +63.78% (Δ 0.63 pp). See `FINAL_DISCREPANCY_RESOLUTION_REPORT.md`. Harness-only; trained policy untouched.
 
+## PHASE-7b CHANGE (Nautilus harness — MONEY_MAX overflow hardening)
+User hit `ValueError: invalid value greater than MONEY_MAX 9_223_372_036.0, was 9_806_263_770.97744` during margin calc. The overflowing notional ($9.8B) ÷ ~$1840/oz ≈ **5.3M units** — an ~80,000× runaway, only reachable under the *pre-fix* cash-sizing + leverage-50 compounding (Phase-7). The current code (net-liq sizing + leverage 2 + `MAX_POSITION_UNITS=1000` clamp) caps the net position at 66 units, so the runaway is already structurally impossible. The remaining defect was that the instrument's `max_quantity` (1 billion) let a hypothetical runaway order *crash the engine* rather than be rejected.
+
+| File · function | Old | New | Justification | Impact |
+|---|---|---|---|---|
+| `nautilus/run_backtest.py` · `build_instrument` | `max_quantity=1_000_000_000` (1B units; notional can exceed MONEY_MAX → engine crash) | `max_quantity=100_000` (~$300M notional cap, far below MONEY_MAX ~3M units @ $3000, far above legit ≤2000-unit orders) | a runaway order is now REJECTED (`on_order_rejected`) instead of crashing margin calc | none on healthy run (max \|pos\| = 66); converts crash → graceful reject |
+
+**Verification (working venv, `optionOne/.venv`):** unchanged healthy result — cum **+63.15%**, Sharpe 2.13, maxDD −4.00%, round trips 37, max \|pos\| **66**, 0 rejections, final **$163,124.91**. Stale `__pycache__` cleared so the pre-fix bytecode cannot be re-run. Harness-only; trained policy untouched.
+
+## PHASE-8 CHANGE (USER-DIRECTED DEVIATION — hourly bars + 5-day week)
+**This is the first change to the `src/rl_gold_trading/` training pipeline.** It is **NOT paper-faithful** — the user explicitly directed two deviations (2026-06-23): keep **hourly** bars (paper resamples to daily) and trade **5 sessions/week** (drop the source's spurious Sunday session). Full record: `HOURLY_5DAY_DEVIATION.md`. Paper-truth doc is unchanged.
+
+| File · location | Old (daily, paper) | New (hourly, user) | Rationale | Impact |
+|---|---|---|---|---|
+| `config.py` · `DataConfig.resample_rule` | `"1D"` | `"1h"` | user wants native hourly resolution | changes the modeled series; **requires retrain** |
+| `data.py` · `_resample()` (was `_resample_daily`) | resample only | resample + `out[out.index.weekday < 5]` | gold open 5 days/wk; source Sunday session (weekday 6 = 1,096 bars) was the spurious 6th bar (Sat = 35 stray) | removes weekend bars → exactly 5 sessions/wk |
+| `config.py` · `ZSCORE_WINDOW` | `252` (252 days) | `6048` (252d × 24h) | preserve paper's 1-year Eq.13 normalization under hourly | forced consequence of hourly |
+| `metrics.py` · `evaluate_model(periods_per_year=…)` | `252` | `6048` | preserve 252-trading-day Sharpe/CAGR annualization under hourly | forced consequence of hourly |
+| `normalize.py`, `vec_env.py`, `run.py` | "252-day"/"daily" comments | hourly/6048 comments | docstrings match code | none (comments) |
+
+**Verification (data layer, run):** hourly bars 49,690 (≈ paper's 47,304 hourly obs), Mon–Fri only (0 weekend bars asserted), median step 1h, 22 features no-NaN, train 30,754 / eval 10,456 hourly bars (≈1.73 yr ÷ 6048/yr ✓).
+
+**Retraining: NOT performed** (user requested code/doc edits + cleanups only). The saved model + metrics are **daily-era and STALE**; all daily performance numbers in `docs/` are superseded pending `python train.py`.
+
+**Cleanups (same change):** deleted dead `models/vecnormalize.pkl` and `models/ppo_xauusd.zip` (old-model artifacts never on the live path; `models/` is gitignored).
+
 ## IF A MISMATCH HAD BEEN FOUND (procedure, unused)
 Each correction would be logged here as: `file:line — old → new — rationale — paper page — expected metric impact`, followed by `python train.py` (retrain) and `python nautilus/run_backtest.py` (revalidate). **Not triggered**, because no mismatch was found.

@@ -1,8 +1,9 @@
 """Vectorized env helpers for the PPO RAW baseline.
 
-NOTE: NO VecNormalize. Observations are already normalized by the 252-day rolling
-z-score (Paper Section IV.B, Eq.13). Adding VecNormalize would double-normalize
-with global running statistics, contradicting the paper.
+NOTE: NO VecNormalize. Observations are already normalized by the rolling
+z-score (Paper Section IV.B, Eq.13; 6048-bar / 1-year window on hourly bars).
+Adding VecNormalize would double-normalize with global running statistics,
+contradicting the paper.
 """
 from typing import List
 

@@ -49,7 +49,12 @@ def build_instrument():
         price_precision=5, size_precision=0,
         price_increment=Price(1e-5, 5), size_increment=Quantity.from_int(1),
         lot_size=Quantity.from_int(1),
-        max_quantity=Quantity.from_str("1000000000"), min_quantity=Quantity.from_int(1),
+        # ponytail: 100k-unit cap (~$300M notional) sits far above any legit order
+        # (<=2000 units after the strategy's 1000-unit clamp) yet far below the
+        # MONEY_MAX overflow point (~3M units @ $3000). A runaway order is now
+        # REJECTED (on_order_rejected) instead of crashing margin calc with
+        # "value greater than MONEY_MAX". Raise only if legit sizing ever exceeds it.
+        max_quantity=Quantity.from_str("100000"), min_quantity=Quantity.from_int(1),
         max_price=None, min_price=None, max_notional=None, min_notional=None,
         margin_init=Decimal("0.50"), margin_maint=Decimal("0.50"), #changed to 50
         maker_fee=Decimal(str(FEE)), taker_fee=Decimal(str(FEE)),
@@ -66,7 +71,7 @@ def build_data(instrument, eval_df):
     from nautilus_trader.model.enums import AggregationSource, BarAggregation, PriceType # type: ignore
     from nautilus_trader.model.objects import Price, Quantity # type: ignore
 
-    spec = BarSpecification(1, BarAggregation.DAY, PriceType.LAST)
+    spec = BarSpecification(1, BarAggregation.HOUR, PriceType.LAST)  # hourly bars (was DAY)
     bar_type = BarType(instrument.id, spec, AggregationSource.EXTERNAL)
     pp = instrument.price_precision
     one = Quantity.from_int(1_000_000)
@@ -123,7 +128,10 @@ def main() -> None:
         custom_objects={"learning_rate": 0.0, "lr_schedule": lambda _: 0.0,
                         "clip_range": lambda _: 0.2},
     )
-    obs_map = {pd.Timestamp(idx).normalize(): eval_df.loc[idx, cols].to_numpy(dtype=np.float32)
+    # HOURLY parity: key on the exact UTC nanosecond timestamp (bijective with the
+    # bar ts_event built below), NOT .normalize() (which floored to midnight and
+    # collapsed all 24 hourly obs of a day to ONE daily key — the parity bug).
+    obs_map = {int(pd.Timestamp(idx).value): eval_df.loc[idx, cols].to_numpy(dtype=np.float32)
                for idx in eval_df.index}
 
     from nautilus_trader.backtest.engine import BacktestEngine, BacktestEngineConfig # type: ignore
@@ -157,18 +165,30 @@ def main() -> None:
     engine.add_strategy(strat)
 
     engine.run()
+    bar_ns = [int(b.ts_event) for b in bars]
     print("DEBUG strat:", strat.dbg)
-    print("DEBUG obs_map sample keys:", [str(k) for k in list(obs_map.keys())[:3]])
+    print("DEBUG parity:",
+          {"bars_total": len(bars), "bars_unique_ts": len(set(bar_ns)),
+           "obs_map_total": len(obs_map), "obs_map_unique_keys": len(set(obs_map.keys())),
+           "obs_hit": strat.dbg.get("obs_hit"), "obs_miss": strat.dbg.get("obs_miss"),
+           "first_bar_ts": [str(pd.Timestamp(n, tz="UTC")) for n in bar_ns[:3]],
+           "first_obs_keys": [str(pd.Timestamp(k, tz="UTC")) for k in list(obs_map.keys())[:3]],
+           "act0_sell": strat.dbg.get("act0"), "act1_flat": strat.dbg.get("act1"),
+           "act2_buy": strat.dbg.get("act2")})
 
     # ---- equity curve: NET-LIQUIDATION (cash + mark-to-market), reconstructed
     # from the actual fills. balance_total() alone is cash-only and excludes
     # unrealized PnL on open positions, which distorts the intermediate curve. ----
     price = eval_df["price"].to_numpy(float)
-    dates = [str(pd.Timestamp(i).date()) for i in eval_df.index]
-    d2i = {d: i for i, d in enumerate(dates)}
+    # HOURLY parity: index fills by the exact decision-bar ns (stored in fills_log
+    # as `dec_ns` from the strategy's _pending), NOT by calendar date (which mapped
+    # ~24 hourly fills onto one day index). Fall back to the fill ts if needed.
+    ns2i = {int(pd.Timestamp(i).value): k for k, i in enumerate(eval_df.index)}
     fills_by_i = {}
-    for (fts, fpx, side, qty, _dd, _dc) in strat.fills_log:
-        fi = d2i.get(str(pd.Timestamp(fts, tz="UTC").date()))
+    for (fts, fpx, side, qty, dec_ns, _dc) in strat.fills_log:
+        fi = ns2i.get(int(dec_ns)) if isinstance(dec_ns, int) else None
+        if fi is None:
+            fi = ns2i.get(int(fts))
         if fi is not None:
             fills_by_i.setdefault(fi, []).append((fpx, signed_qty(side, qty)))
     cash, pos_units, eq = STARTING_USD, 0.0, []
@@ -179,7 +199,7 @@ def main() -> None:
             pos_units += sq
         eq.append(cash + pos_units * price[i])  # net liquidation value
     final_bal = float(eq[-1])
-    nm = metrics_from_equity(eq)
+    nm = metrics_from_equity(eq, ppy=6048)  # hourly annualization (252d x 24h), env-matched
     max_abs_pos = 0.0
     cash_audit, pos_audit = STARTING_USD, 0.0
     for i in range(len(price)):

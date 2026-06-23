@@ -2,3 +2,11 @@
 models/
 __pycache__/
 .venv/
+
+ablation-study/Reinforcement-Learning-for-Gold-Trading/docs/
+ablation-study/Reinforcement-Learning-for-Gold-Trading/docs/HOURLY_5DAY_DEVIATION.md
+ablation-study/Reinforcement-Learning-for-Gold-Trading/docs/PPO_RAW_RESULT_DEVIATION_ROOT_CAUSE.md
+ablation-study/Reinforcement-Learning-for-Gold-Trading/nautilus/nautilus_metrics.json
+ablation-study/knowledgeGraphResearchPaper/
+ablation-study/Reinforcement-Learning-for-Gold-Trading/forensics/
+ablation-study/Reinforcement-Learning-for-Gold-Trading/logs/

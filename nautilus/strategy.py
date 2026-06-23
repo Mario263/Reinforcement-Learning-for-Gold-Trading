@@ -1,8 +1,8 @@
 """RLPolicyStrategy — drives the trained PPO Raw policy inside Nautilus Trader.
 
 Inference only (PPO.load + predict). Observations are the SAME precomputed 22-vectors
-used by the evaluation pipeline (looked up by bar date) — NO indicator recomputation
-inside Nautilus, guaranteeing bitwise consistency (see STATE_CONSISTENCY_AUDIT.md).
+used by the evaluation pipeline (looked up by exact hourly UTC-ns timestamp) — NO
+indicator recomputation inside Nautilus, guaranteeing bitwise consistency.
 
 Action -> target position mapping (paper A={-1,0,+1}):
   0 -> short, 1 -> flat, 2 -> long. Orders move the NET position to target via
@@ -92,14 +92,19 @@ class RLPolicyStrategy(Strategy):
             return str(side).upper().endswith("BUY")
 
     def on_bar(self, bar) -> None:
-        date = pd.Timestamp(bar.ts_event, tz="UTC").normalize()
+        # HOURLY parity: key on the exact bar timestamp (integer UTC nanoseconds),
+        # NOT .normalize()/.date() (which floor to midnight and collapse all 24
+        # hourly bars of a day to one daily key). The ns key is bijective with
+        # eval_df.index (build_data uses the same int(pd.Timestamp(ts).value)).
+        key = int(bar.ts_event)
+        ts = pd.Timestamp(bar.ts_event, tz="UTC")
         equity = self._net_liq(float(bar.close))
         self.equity_curve.append((int(bar.ts_event), equity))
         self.dbg["bars"] += 1
         if len(self.dbg["first_keys"]) < 3:
-            self.dbg["first_keys"].append(str(date))
+            self.dbg["first_keys"].append(str(ts))
 
-        obs = self._obs_map.get(date)
+        obs = self._obs_map.get(key)
         if obs is None or np.any(~np.isfinite(obs)):   # missing/NaN -> hold
             self.dbg["obs_miss"] += 1
             return
@@ -112,7 +117,7 @@ class RLPolicyStrategy(Strategy):
         self.dbg[f"act{action}"] += 1
         target_pos = ACTION_TO_POSITION[action]
         price = float(bar.close)
-        self.action_log.append((str(date.date()), action, target_pos, price))
+        self.action_log.append((str(ts), action, target_pos, price))
 
         self._last_decision_px = price
         if price <= 0:
@@ -136,7 +141,7 @@ class RLPolicyStrategy(Strategy):
             order_side=side,
             quantity=qty,
         )
-        self._pending = (str(date.date()), price)   # decision context for this order
+        self._pending = (key, price)   # decision context (exact ns) for this order
         self.submit_order(order)
         self.dbg["orders"] += 1
 

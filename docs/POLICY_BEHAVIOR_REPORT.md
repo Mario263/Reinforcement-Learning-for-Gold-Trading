@@ -1,3 +1,5 @@
+> ⚠️ **DAILY-ERA — SUPERSEDED.** This report describes the original **daily** pipeline. The build now runs **hourly + 5-day-week** (user-directed). Performance numbers below are daily-era and STALE pending a retrain. See [HOURLY_5DAY_DEVIATION.md](HOURLY_5DAY_DEVIATION.md).
+
 # POLICY BEHAVIOR REPORT
 
 Direct inspection of PPO Raw behavior on the 621-day window (530 daily periods), from `forensics/forensic_dump.json`. Inference only.

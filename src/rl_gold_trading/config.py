@@ -16,10 +16,13 @@ class DataConfig:
     """Paper Section IV.A (PDF p.5-6)."""
     csv_path: Optional[str] = None
     hf_dataset: str = "ZombitX64/xauusd-gold-price-historical-data-2004-2025"
-    # XAU/USD, Jan 2017 -> Jan 2025 (p.5), resampled to DAILY (p.6).
+    # XAU/USD, Jan 2017 -> Jan 2025 (p.5).
     start: str = "2017-01-01"
     end: str = "2025-02-01"          # exclusive upper bound (covers Jan 2025)
-    resample_rule: str = "1D"         # "re-sampled to daily frequency" (p.6)
+    # DEVIATION FROM PAPER (user-directed): the paper re-samples to DAILY (p.6);
+    # we keep HOURLY bars instead (source is 1-min -> resample to 1h). Weekends
+    # are dropped (Mon-Fri only) so gold trades exactly 5 sessions/week.
+    resample_rule: str = "1h"         # hourly (was "1D" daily, per paper)
     # Temporal split: 70% train (2017->Dec 2022), 30% test (2023->Jan 2025) (p.6).
     train_end: str = "2022-12-31"
     test_start: str = "2023-01-01"
@@ -81,5 +84,7 @@ FEATURE_ORDER: List[str] = [
     "cci",                                                # market structure
     "williams_r",                                         # market structure
 ]
-ZSCORE_WINDOW: int = 252                                  # rolling z-score (p.6, Eq.13)
+# Rolling z-score (p.6, Eq.13). Paper specifies a 252-DAY (1 trading year) window.
+# On HOURLY bars (user-directed deviation) that 1-year window = 252 days x 24h.
+ZSCORE_WINDOW: int = 6048                                 # 252 trading days x 24h (1-year, hourly)
 assert len(FEATURE_ORDER) == 22, "State must be exactly 22 dimensions (paper p.7)."

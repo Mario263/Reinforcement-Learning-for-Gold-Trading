@@ -1,12 +1,13 @@
 """Evaluation metrics (Paper Section V, PDF p.15).
 
 Computes the paper's PPO Raw metrics from the strategy equity curve over the
-621-day evaluation window: cumulative return, CAGR, Sharpe (sqrt(252)),
-max drawdown, win rate (+ Sortino / Calmar / Recovery / VaR diagnostics).
-Deterministic single pass; no random reset.
+evaluation window: cumulative return, CAGR, Sharpe, max drawdown, win rate
+(+ Sortino / Calmar / Recovery / VaR diagnostics). Deterministic single pass;
+no random reset.
 
-NOTE: the paper does not state its Sharpe annualization factor; sqrt(252) is the
-daily convention consistent with daily resampling (documented assumption).
+NOTE: the paper does not state its Sharpe annualization factor. On HOURLY bars
+(user-directed deviation), annualization = 252 trading days x 24h = 6048 periods
+per year (consistent with the paper's 252-trading-day basis). Documented assumption.
 """
 from typing import Dict
 
@@ -16,7 +17,7 @@ from stable_baselines3 import PPO
 from rl_gold_trading.envs import XAUUSDTradingEnv
 
 
-def evaluate_model(model: PPO, env: XAUUSDTradingEnv, periods_per_year: int = 252) -> Dict[str, float]:
+def evaluate_model(model: PPO, env: XAUUSDTradingEnv, periods_per_year: int = 6048) -> Dict[str, float]:
     obs, _ = env.reset()
     net_rets, equity, positions = [], [env.equity], []
     done = False

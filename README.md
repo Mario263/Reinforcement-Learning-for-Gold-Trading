@@ -6,13 +6,15 @@ This repository has been transformed into a **faithful reproduction of the "PPO 
 
 It reproduces **only** the PPO Raw baseline (no Kalman, no DQN, no RPPO). The paper — not this codebase's original strategy — is the source of truth. See [docs/PPO_RAW_REPRODUCTION_REPORT.md](docs/PPO_RAW_REPRODUCTION_REPORT.md) and [../researchPaper/PPO_RAW_GROUND_TRUTH.md](../researchPaper/PPO_RAW_GROUND_TRUTH.md).
 
+> ⚠️ **USER-DIRECTED DEVIATIONS FROM PAPER (active):** the pipeline now runs on **HOURLY** bars (the paper resamples to daily) and **5 sessions/week** (weekends dropped, Mon–Fri). The z-score window and metric annualization are scaled to keep their 1-year / 252-trading-day meaning (6048 hourly bars). Full record: [docs/HOURLY_5DAY_DEVIATION.md](docs/HOURLY_5DAY_DEVIATION.md). **The saved model + metrics are daily-era and STALE — a retrain is required before any hourly metrics are valid.**
+
 > **Env ↔ Nautilus validated (Phase 6):** the RL-environment result (+48.94%) was independently reproduced in an event-driven **Nautilus Trader** backtest (**+48.67%**, Δ < 0.3 pp) after fixing a harness fill-timing bug. See [docs/ROOT_CAUSE_REPORT.md](docs/ROOT_CAUSE_REPORT.md) and [docs/REPLICATION_CORRECTION_REPORT.md](docs/REPLICATION_CORRECTION_REPORT.md).
 
-## Methodology (all values from the paper)
-- **Data:** XAU/USD, 2017-01 → 2025-01, **resampled to daily** OHLCV (Paper §IV.A).
+## Methodology (paper values, except the two flagged deviations)
+- **Data:** XAU/USD, 2017-01 → 2025-01, **resampled to HOURLY** OHLCV, **Mon–Fri only** (⚠️ deviation: paper uses daily; §IV.A). Source is 1-min → 1h.
 - **State:** exactly **22 features** = 5 raw OHLCV + 17 technical indicators (SMA 10/20/50, EMA 12/26, MACD line+signal, RSI 14, Stochastic %K/%D, Bollinger 20±2σ, ATR 14, OBV, VWAP, CCI, Williams %R), computed with the `ta` library (§IV.B).
-- **Normalization:** 252-day **causal rolling z-score** (§IV.B, Eq.13).
-- **Split:** calendar — train 2017→2022; reported metrics on the **621-day window** Jan 2 2023 → Sep 12 2024 (§IV.A).
+- **Normalization:** **6048-bar (1-year) causal rolling z-score** (§IV.B, Eq.13; paper's 252-day window scaled to hourly).
+- **Split:** calendar — train 2017→2022; reported metrics on the window Jan 2 2023 → Sep 12 2024 (§IV.A), now ~10,456 hourly bars.
 - **Action:** `Discrete(3)` → {sell −1, hold 0, buy +1}; **100% capital** (§IV.E).
 - **Reward (Eq.22):** `1.0·Return − 2.0·Drawdown − 0.5·Cost + 0.1·Stability` (§IV.F).
 - **Costs:** commission 0.01% + spread 0.005% (§IV.E).
@@ -27,7 +29,7 @@ pip install stable-baselines3 gymnasium torch pandas numpy ta datasets
 ```bash
 python train.py --smoke      # fast 5k-step sanity check
 python train.py              # full 500k-step reproduction (train + eval)
-python train.py --mode eval  # evaluate a saved model on the 621-day window
+python train.py --mode eval  # evaluate a saved model on the eval window (retrain first — daily model is stale)
 ```
 Outputs: `models/ppo_xauusd_raw.zip`, `models/ppo_raw_metrics.json`.
 

@@ -1,9 +1,9 @@
 """PPO RAW baseline reproduction orchestrator (Kili et al., IJACSA 16(11), 2025).
 
-Pipeline (Paper Section IV):
-  daily XAU/USD 2017-2025 -> 22 features -> 252-day rolling z-score
+Pipeline (Paper Section IV, with user-directed hourly/5-day deviations):
+  hourly XAU/USD 2017-2025 (Mon-Fri) -> 22 features -> 1-year (6048-bar) z-score
   -> calendar split (train 2017-2022) -> PPO RAW (SB3, paper arch/hparams, 500k)
-  -> evaluate on the 621-day window (Jan 2 2023 -> Sep 12 2024).
+  -> evaluate on the window (Jan 2 2023 -> Sep 12 2024).
 
 NO Kalman / DQN / RPPO. PPO Raw only.
 """
@@ -31,7 +31,7 @@ PAPER_TARGET = {
 def prepare(data_cfg: DataConfig):
     daily = load_data(data_cfg)
     feat, cols = add_features(daily)
-    feat_z = rolling_zscore(feat, cols)        # 252-day causal z-score (drops warmup)
+    feat_z = rolling_zscore(feat, cols)        # 6048-bar (1-year) causal z-score (drops warmup)
     train, _test = split_train_test(feat_z, data_cfg)
     eval_df = eval_window(feat_z, data_cfg)    # 621-day reported window
     return cols, train, eval_df, daily
@@ -57,9 +57,9 @@ def main(args: Optional[argparse.Namespace] = None) -> None:
     if args.timesteps is not None:
         train_cfg.total_timesteps = args.timesteps
 
-    print("[1/5] Data -> 22 features -> 252 z-score -> calendar split + 621-day eval...")
+    print("[1/5] Data -> 22 features -> 6048-bar z-score -> calendar split + eval window...")
     cols, train_df, eval_df, daily = prepare(data_cfg)
-    print(f"      daily bars: {len(daily)} | train: {len(train_df)} | eval(621d): {len(eval_df)} | obs_dim: {len(cols)}")
+    print(f"      hourly bars: {len(daily)} | train: {len(train_df)} | eval: {len(eval_df)} | obs_dim: {len(cols)}")
     print(f"      train: {train_df.index.min().date()} -> {train_df.index.max().date()}")
     print(f"      eval : {eval_df.index.min().date()} -> {eval_df.index.max().date()}")
 

@@ -1,3 +1,5 @@
+> ⚠️ **DAILY-ERA — SUPERSEDED.** This report describes the original **daily** pipeline. The build now runs **hourly + 5-day-week** (user-directed). Performance numbers below are daily-era and STALE pending a retrain. See [HOURLY_5DAY_DEVIATION.md](HOURLY_5DAY_DEVIATION.md).
+
 # METRIC FORENSICS (Agent 6)
 
 Verification of every reported metric formula and value. Source: `metrics.evaluate_model`. Values independently recomputed in `forensics/forensic_dump.json`. Window: 621-day, 530 transitions.

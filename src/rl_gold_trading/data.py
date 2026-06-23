@@ -1,7 +1,14 @@
 """Data loading & splitting for the PPO RAW baseline (Paper Section IV.A, PDF p.5-6).
 
-XAU/USD -> filter 2017-01..2025-01 -> resample DAILY OHLCV -> forward-fill (<0.1%).
-Splits are purely temporal (calendar dates), so there is no leakage.
+XAU/USD -> filter 2017-01..2025-01 -> resample HOURLY OHLCV -> drop weekends
+(Mon-Fri only) -> forward-fill (<0.1%). Splits are purely temporal (calendar
+dates), so there is no leakage.
+
+DEVIATIONS FROM PAPER (user-directed):
+  1. Frequency: HOURLY bars (paper resamples to daily). Source is 1-min -> 1h.
+  2. Sessions: gold is open 5 days/week, so weekend bars are removed. The source
+     produces a spurious Sunday session (weekday 6); keeping only Mon-Fri
+     (weekday < 5) yields exactly 5 sessions/week.
 """
 from typing import Tuple
 
@@ -42,12 +49,15 @@ def _standardize(df: pd.DataFrame) -> pd.DataFrame:
     return df[["open", "high", "low", "close", "volume"]]
 
 
-def _resample_daily(df: pd.DataFrame, rule: str) -> pd.DataFrame:
+def _resample(df: pd.DataFrame, rule: str) -> pd.DataFrame:
     agg = {"open": "first", "high": "max", "low": "min", "close": "last", "volume": "sum"}
     out = df.resample(rule).agg(agg)
-    # Drop non-trading days (all-OHLC NaN), then forward-fill residual sparse gaps
-    # ("forward-fill interpolation", p.6).
+    # Drop empty (non-trading) bars (all-OHLC NaN). Gold is open 5 days/week, so
+    # keep Mon-Fri only (weekday < 5); this removes the spurious Sunday session
+    # (weekday 6) and stray Saturday bars.
     out = out.dropna(subset=["open", "high", "low", "close"], how="all")
+    out = out[out.index.weekday < 5]
+    # Forward-fill residual sparse gaps ("forward-fill interpolation", p.6).
     out[["open", "high", "low", "close"]] = out[["open", "high", "low", "close"]].ffill()
     out["volume"] = out["volume"].fillna(0.0)
     out = out.dropna(subset=["open", "high", "low", "close"])
@@ -59,14 +69,14 @@ def load_data(cfg: DataConfig) -> pd.DataFrame:
     lo = pd.Timestamp(cfg.start, tz="UTC")
     hi = pd.Timestamp(cfg.end, tz="UTC")
     df = df.loc[(df.index >= lo) & (df.index < hi)]
-    return _resample_daily(df, cfg.resample_rule)
+    return _resample(df, cfg.resample_rule)
 
 
 def split_train_test(df: pd.DataFrame, cfg: DataConfig):
     """Calendar split (p.6): train <= train_end ; test >= test_start.
 
     `df` is the post-normalization (post-warmup) feature frame, so the
-    252-day z-score window has already consumed the earliest rows causally.
+    1-year (6048-bar) z-score window has already consumed the earliest rows causally.
     """
     train_end = pd.Timestamp(cfg.train_end, tz="UTC")
     test_start = pd.Timestamp(cfg.test_start, tz="UTC")

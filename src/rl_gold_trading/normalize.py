@@ -1,8 +1,10 @@
-"""252-day rolling z-score normalization (Paper Section IV.B, Eq.13, PDF p.6).
+"""Rolling z-score normalization (Paper Section IV.B, Eq.13, PDF p.6).
 
-    z_t = (x_t - mu_{t-252:t}) / sigma_{t-252:t}
+    z_t = (x_t - mu_{t-W:t}) / sigma_{t-W:t}
 
-CAUSAL: trailing 252-observation window only (inclusive of t) -> no look-ahead.
+The paper specifies a 252-DAY (1 trading year) window. On HOURLY bars
+(user-directed deviation) that window is W = ZSCORE_WINDOW = 6048 (252 days x 24h).
+CAUSAL: trailing W-observation window only (inclusive of t) -> no look-ahead.
 Applied per-feature (not global). Replaces any global/running normalization.
 """
 import numpy as np

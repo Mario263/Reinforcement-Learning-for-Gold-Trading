@@ -1,3 +1,5 @@
+> ⚠️ **DAILY-ERA — SUPERSEDED.** This report describes the original **daily** pipeline. The build now runs **hourly + 5-day-week** (user-directed). Performance numbers below are daily-era and STALE pending a retrain. See [HOURLY_5DAY_DEVIATION.md](HOURLY_5DAY_DEVIATION.md).
+
 # WIN-RATE FORENSIC REPORT
 
 **Scope:** explain the `10.75%` vs `59.38%` win-rate figures for the trained PPO Raw model. All numbers are read **directly** from a deterministic inference rollout of the saved model on the 621-day window (`forensics/run_forensics.py` → `forensics/forensic_dump.json`). No retraining, no assumptions.
