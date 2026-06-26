@@ -14,3 +14,4 @@ ablation-study/Reinforcement-Learning-for-Gold-Trading/logs/
 # large/regenerable or local-only
 data/
 _quarantine_old_runtime/
+data\raw\dukascopy\XAUUSD\1H

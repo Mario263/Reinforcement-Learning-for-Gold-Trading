@@ -1,0 +1,87 @@
+C:\Users\Abhishek Sharma\Desktop\RawPPO\.venv\lib\site-packages\stable_baselines3\common\on_policy_algorithm.py:150: UserWarning: You are trying to run PPO on the GPU, but it is primarily intended to run on the CPU when not using a CNN policy (you are using ActorCriticPolicy which should be a MlpPolicy). See https://github.com/DLR-RM/stable-baselines3/issues/1245 for more info. You can pass `device='cpu'` or `export CUDA_VISIBLE_DEVICES=` to force using the CPU.Note: The model will train, but the GPU utilization will be poor and the training might take longer than on CPU.
+  warnings.warn(
+[modern] csv=C:\Users\Abhishek Sharma\Desktop\RawPPO\data\processed\xauusd_1h_2003_2026.csv
+  train 2017-01-01..2022-12-31 rows=34966 | eval 2023-01-02..2024-09-12 rows=9897 | device=cuda | ent_coef=None
+Using cuda device
+Wrapping the env in a DummyVecEnv.
+-----------------------------
+| time/              |      |
+|    fps             | 647  |
+|    iterations      | 1    |
+|    time_elapsed    | 3    |
+|    total_timesteps | 2048 |
+-----------------------------
+-----------------------------------------
+| time/                   |             |
+|    fps                  | 628         |
+|    iterations           | 2           |
+|    time_elapsed         | 6           |
+|    total_timesteps      | 4096        |
+| train/                  |             |
+|    approx_kl            | 0.006724283 |
+|    clip_fraction        | 0.016       |
+|    clip_range           | 0.2         |
+|    entropy_loss         | -1.1        |
+|    explained_variance   | -0.00762    |
+|    learning_rate        | 0.000239    |
+|    loss                 | 2.01        |
+|    n_updates            | 10          |
+|    policy_gradient_loss | -0.00342    |
+|    value_loss           | 14.3        |
+-----------------------------------------
+------------------------------------------
+| time/                   |              |
+|    fps                  | 654          |
+|    iterations           | 3            |
+|    time_elapsed         | 9            |
+|    total_timesteps      | 6144         |
+| train/                  |              |
+|    approx_kl            | 0.0007611824 |
+|    clip_fraction        | 0            |
+|    clip_range           | 0.2          |
+|    entropy_loss         | -1.09        |
+|    explained_variance   | 0.24         |
+|    learning_rate        | 0.000177     |
+|    loss                 | 5.75         |
+|    n_updates            | 20           |
+|    policy_gradient_loss | -0.000727    |
+|    value_loss           | 44.4         |
+------------------------------------------
+-------------------------------------------
+| time/                   |               |
+|    fps                  | 673           |
+|    iterations           | 4             |
+|    time_elapsed         | 12            |
+|    total_timesteps      | 8192          |
+| train/                  |               |
+|    approx_kl            | 0.00014045008 |
+|    clip_fraction        | 0             |
+|    clip_range           | 0.2           |
+|    entropy_loss         | -1.09         |
+|    explained_variance   | 0.000601      |
+|    learning_rate        | 0.000116      |
+|    loss                 | 102           |
+|    n_updates            | 30            |
+|    policy_gradient_loss | -0.000553     |
+|    value_loss           | 226           |
+-------------------------------------------
+-------------------------------------------
+| time/                   |               |
+|    fps                  | 685           |
+|    iterations           | 5             |
+|    time_elapsed         | 14            |
+|    total_timesteps      | 10240         |
+| train/                  |               |
+|    approx_kl            | 6.7010114e-05 |
+|    clip_fraction        | 0             |
+|    clip_range           | 0.2           |
+|    entropy_loss         | -1.09         |
+|    explained_variance   | -0.0224       |
+|    learning_rate        | 5.42e-05      |
+|    loss                 | 193           |
+|    n_updates            | 40            |
+|    policy_gradient_loss | -0.000269     |
+|    value_loss           | 403           |
+-------------------------------------------
+  RESULT pos={'short_frac': 0.41703718674211804, 'flat_frac': 0.38217461600646724, 'long_frac': 0.20078819725141472} cum=-19.55% sharpe=-1.16 max_dd=-23.87%
+  model=methods/rawPPo/models/rawppo_modern_10k.zip metrics=methods\rawPPo\models\rawppo_modern_10k_metrics.json curve=methods\rawPPo\models\rawppo_modern_10k_curve.csv

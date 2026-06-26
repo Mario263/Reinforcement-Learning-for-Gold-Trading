@@ -63,5 +63,7 @@ class RawPPOEnv(gym.Env):
         truncated = self.t >= (self.n - 1)
         obs_idx = min(self.t, self.n - 1)
         info = {"equity": float(self.equity), "net_ret": float(net_ret),
-                "position": int(self.position), "drawdown": float(dd), "cost": float(cost_frac)}
+                "position": int(self.position), "drawdown": float(dd), "cost": float(cost_frac),
+                "gross_return": float(r_port), "cost_frac": float(cost_frac),
+                "stability": -float(turnover)}
         return self.feat[obs_idx].copy(), float(reward), False, truncated, info
