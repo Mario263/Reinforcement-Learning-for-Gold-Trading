@@ -19,6 +19,7 @@ class BridgeStrategy(Strategy):
     def __init__(self, bar_type, instrument, venue, obs_q: Queue, act_q: Queue, deploy_frac: float):
         super().__init__()
         self.bt = bar_type
+        self.instrument = instrument
         self.instrument_id = instrument.id
         self.venue = venue
         self.obs_q, self.act_q = obs_q, act_q
@@ -31,10 +32,16 @@ class BridgeStrategy(Strategy):
     def on_order_filled(self, event):
         self._pending_notional += float(event.last_qty) * float(event.last_px)
 
-    def _equity(self) -> float:
+    def _equity(self, price: float) -> float:
+        # Mark-to-market the open position at the CURRENT bar price (bars-only feed does not
+        # auto-update portfolio.unrealized_pnl per bar). cash + Σ position.unrealized_pnl(price).
         cash = self.portfolio.account(self.venue).balance_total(USD).as_double()
-        up = self.portfolio.unrealized_pnl(self.instrument_id)
-        return cash + (up.as_double() if up is not None else 0.0)
+        px = self.instrument.make_price(price)
+        upnl = 0.0
+        for p in self.cache.positions_open():
+            if p.instrument_id == self.instrument_id:
+                upnl += p.unrealized_pnl(px).as_double()
+        return cash + upnl
 
     def _net_dir(self) -> int:
         net = float(self.portfolio.net_position(self.instrument_id))
@@ -45,7 +52,7 @@ class BridgeStrategy(Strategy):
         if self._aborted:
             return
         price = float(bar.close)
-        self.obs_q.put({"index": self._i, "equity": self._equity(), "dir": self._net_dir(),
+        self.obs_q.put({"index": self._i, "equity": self._equity(price), "dir": self._net_dir(),
                         "traded_notional": self._pending_notional, "price": price})
         self._pending_notional = 0.0
         action = self.act_q.get()
@@ -55,7 +62,7 @@ class BridgeStrategy(Strategy):
         target_dir = action_to_target(action)
         cur_dir = self._net_dir()
         if target_dir != cur_dir:
-            equity = self._equity()
+            equity = self._equity(price)
             target_oz = int(target_dir * int(self.deploy_frac * equity / price))
             cur_oz = int(float(self.portfolio.net_position(self.instrument_id)))
             delta = target_oz - cur_oz

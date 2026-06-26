@@ -15,3 +15,5 @@ ablation-study/Reinforcement-Learning-for-Gold-Trading/logs/
 data/
 _quarantine_old_runtime/
 data\raw\dukascopy\XAUUSD\1H
+
+.claude

@@ -1,0 +1,27 @@
+{
+  "n_periods": 9896,
+  "cumulative_return": -0.14964045033117268,
+  "cagr": -0.09431703139738457,
+  "sharpe": -0.8057406962807248,
+  "sortino": -0.8640687424720751,
+  "calmar": -0.4692586369984852,
+  "recovery_factor": -0.744511067851451,
+  "max_drawdown": -0.20099157258066414,
+  "volatility": 0.11477771395764873,
+  "var_95": -0.0021242598981732197,
+  "final_equity": 0.8503595496688273,
+  "total_turnover": 201,
+  "round_trips": 101,
+  "win_rate_all_periods": 0.3037590945836702,
+  "win_rate_in_market": 0.491417361451692,
+  "trade_win_rate_round_trips": 0.6237623762376238,
+  "profit_factor": 0.6220656234914893,
+  "long_frac": 0.008387227162489895,
+  "flat_frac": 0.3818714632174616,
+  "short_frac": 0.6097413096200485,
+  "position_distribution": {
+    "short_frac": 0.6097413096200485,
+    "flat_frac": 0.3818714632174616,
+    "long_frac": 0.008387227162489895
+  }
+}
