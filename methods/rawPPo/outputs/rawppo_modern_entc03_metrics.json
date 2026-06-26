@@ -1,0 +1,34 @@
+{
+  "tag": "modern_entc03",
+  "train_rows": 34966,
+  "eval_rows": 9897,
+  "ent_coef": 0.03,
+  "total_timesteps": 150000,
+  "position_distribution": {
+    "short_frac": 0.3271018593371059,
+    "flat_frac": 0.07548504446240906,
+    "long_frac": 0.597413096200485
+  },
+  "metrics": {
+    "n_periods": 9896,
+    "cumulative_return": -0.05131993863712514,
+    "cagr": -0.03168510705170258,
+    "sharpe": -0.17333401756713687,
+    "sortino": -0.21327095566215998,
+    "calmar": -0.14699762106876835,
+    "recovery_factor": -0.238090055392355,
+    "max_drawdown": -0.21554843419458924,
+    "var_95": -0.0024585099116043174,
+    "win_rate": 0.46281325788197253,
+    "active_win_rate": 0.500601158596568,
+    "trade_win_rate": 0.2570093457943925,
+    "round_trips": 214,
+    "final_equity": 0.9486800613628749,
+    "total_turnover": 427,
+    "long_frac": 0.597413096200485,
+    "flat_frac": 0.07548504446240906,
+    "short_frac": 0.3271018593371059
+  },
+  "entropy_first": -1.0941313698887825,
+  "entropy_last": -0.366499687358737
+}

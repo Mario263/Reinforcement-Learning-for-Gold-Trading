@@ -1,0 +1,10 @@
+# RawPPO runtime deps (Python 3.10). Pinned to the versions proven present in the
+# working system interpreter; torch/datasets left unpinned (PyPI Windows torch = CPU build).
+numpy==2.2.6
+pandas==2.3.3
+ta==0.11.0
+gymnasium==1.3.0
+stable-baselines3==2.9.0
+torch
+datasets
+nautilus_trader==1.202.0
