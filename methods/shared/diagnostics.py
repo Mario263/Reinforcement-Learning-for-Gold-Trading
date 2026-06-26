@@ -16,16 +16,6 @@ def obs_hash(obs) -> str:
     return hashlib.sha1(np.asarray(obs, dtype=np.float64).tobytes()).hexdigest()[:16]
 
 
-def synthetic_ohlc(closes) -> "object":
-    """Build a tiny valid-OHLC DataFrame from a close list (for mechanics tests)."""
-    import pandas as pd
-    c = np.asarray(closes, float)
-    o = np.concatenate([[c[0]], c[:-1]])
-    idx = pd.date_range("2020-01-06", periods=len(c), freq="h", tz="UTC")  # a Monday
-    return pd.DataFrame({"open": o, "high": np.maximum(o, c), "low": np.minimum(o, c),
-                         "close": c, "volume": np.full(len(c), 1000.0)}, index=idx)
-
-
 def compute_metrics(net_rets: Sequence[float], equity: Sequence[float],
                     positions: Sequence[int],
                     periods_per_year: int = PERIODS_PER_YEAR) -> Dict[str, float]:

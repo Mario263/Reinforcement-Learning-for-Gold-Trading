@@ -102,7 +102,9 @@ class NautilusTrainingEnv(gym.Env):
         self.prev_equity, self.prev_dir, self._cur = net_equity, target_dir, nxt
         truncated = nxt["index"] >= self.n - 1
         info = {"equity": net_equity, "net_ret": net_ret, "position": target_dir,
-                "nautilus_dir": nxt["dir"], "cost": cost, "drawdown": dd}
+                "nautilus_dir": nxt["dir"], "cost": cost, "drawdown": dd,
+                "gross_return": gross_return, "cost_frac": cost_frac,
+                "stability": -float(turn)}
         return self.obs_matrix[nxt["index"]].copy(), float(reward), False, truncated, info
 
     def close(self):

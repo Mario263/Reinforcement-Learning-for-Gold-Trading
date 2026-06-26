@@ -42,10 +42,3 @@ def load_processed(csv_path: Optional[str] = None) -> pd.DataFrame:
     out[["open", "high", "low", "close"]] = out[["open", "high", "low", "close"]].ffill()
     out["volume"] = out["volume"].fillna(0.0)
     return out.dropna(subset=["open", "high", "low", "close"])
-
-
-def slice_window(df: pd.DataFrame, start: str, end: str, inclusive_end: bool = True) -> pd.DataFrame:
-    lo = pd.Timestamp(start, tz="UTC")
-    hi = pd.Timestamp(end, tz="UTC")
-    m = (df.index >= lo) & (df.index <= hi if inclusive_end else df.index < hi)
-    return df.loc[m]

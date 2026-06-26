@@ -10,3 +10,7 @@ ablation-study/Reinforcement-Learning-for-Gold-Trading/nautilus/nautilus_metrics
 ablation-study/knowledgeGraphResearchPaper/
 ablation-study/Reinforcement-Learning-for-Gold-Trading/forensics/
 ablation-study/Reinforcement-Learning-for-Gold-Trading/logs/
+
+# large/regenerable or local-only
+data/
+_quarantine_old_runtime/
